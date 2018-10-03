@@ -10,7 +10,7 @@ Like [`AAXtoMP3`](https://github.com/KrumpetPirate/AAXtoMP3) but without the tra
 #### Installation
 
 ```sh
-curl https://chbrown.github.io/audible/audible.sh
+curl https://chbrown.github.io/audible/audible.sh > /usr/local/bin/audible
 chmod +x /usr/local/bin/audible
 ```
 
