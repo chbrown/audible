@@ -1,5 +1,7 @@
 # Audible
 
+Audio extraction and chapter splitting from Audible audiobooks.
+
 Like [`AAXtoMP3`](https://github.com/KrumpetPirate/AAXtoMP3) but without the transcoding.
 
 
