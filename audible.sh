@@ -52,10 +52,11 @@ fi
 for AAX in "${AAX_FILES[@]}"; do
   # prepare list of arguments shared between all calls to ffprobe/ffmpeg
   FFOPTS=(-hide_banner -loglevel error -activation_bytes "$ACTIVATION_BYTES" -i "$AAX")
-  # read artist and album metadata from format tags (p=0 omits section name)
-  IFS=, read -r ARTIST ALBUM < <(ffprobe "${FFOPTS[@]}" -print_format csv=p=0 -show_entries format_tags=artist,album)
+  # read artist and album metadata from format tags (flat is intended for shell integration)
+  # this defines two new variables: format_tags_artist and format_tags_album
+  eval "$(ffprobe "${FFOPTS[@]}" -print_format flat=s=_ -show_entries format_tags=artist,album)"
   # write all output to (new) directory within current directory
-  OUTDIR="$ARTIST - $ALBUM"
+  OUTDIR="$format_tags_artist - $format_tags_album"
   >&2 printf 'Creating directory "%s"\n' "$OUTDIR"
   mkdir -p "$OUTDIR"
 
