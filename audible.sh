@@ -51,17 +51,17 @@ fi
 
 for AAX in "${AAX_FILES[@]}"; do
   # prepare list of arguments shared between all calls to ffprobe/ffmpeg
-  FFOPTS=(-hide_banner -loglevel error -activation_bytes "$ACTIVATION_BYTES" -i "$AAX")
+  FFOPTS=(-hide_banner -loglevel error -activation_bytes "$ACTIVATION_BYTES")
   # read artist and album metadata from format tags (flat is intended for shell integration)
   # this defines two new variables: format_tags_artist and format_tags_album
-  eval "$(ffprobe "${FFOPTS[@]}" -print_format flat=s=_ -show_entries format_tags=artist,album)"
+  eval "$(ffprobe "${FFOPTS[@]}" -i "$AAX" -print_format flat=s=_ -show_entries format_tags=artist,album)"
   # write all output to (new) directory within current directory
   OUTDIR="$format_tags_artist - $format_tags_album"
   >&2 printf 'Creating directory "%s"\n' "$OUTDIR"
   mkdir -p "$OUTDIR"
 
   # get total chapter count (short form of more specific input to while loop)
-  NCHAPTERS=$(ffprobe "${FFOPTS[@]}" -print_format csv -show_chapters | wc -l)
+  NCHAPTERS=$(ffprobe "${FFOPTS[@]}" -i "$AAX" -print_format csv -show_chapters | wc -l)
   >&2 printf 'Extracting %d chapters from "%s"\n' "$NCHAPTERS" "$AAX"
   # loop over each chapter, extracting directly from original file
   while IFS=, read -r ID START_TIME END_TIME TITLE_TAG; do
@@ -71,11 +71,11 @@ for AAX in "${AAX_FILES[@]}"; do
     # 2. copy both audio and video to output (-c copy), but drop data stream (-dn)
     # 3. drop chapter metadata (-map_chapters -1)
     # 4. overwrite track/title metadata with per-chapter values (-metadata)
-    ffmpeg -nostdin "${FFOPTS[@]}" \
+    ffmpeg -nostdin "${FFOPTS[@]}" -i "$AAX" \
       -ss "$START_TIME" -to "$END_TIME" \
       -c copy -dn \
       -map_chapters -1 \
       -metadata title="$TITLE_TAG" -metadata track="$((ID + 1))/$NCHAPTERS" \
       "$OUTDIR/$OUTFILE"
-  done < <(ffprobe "${FFOPTS[@]}" -print_format csv=p=0 -show_entries chapter=id,start_time,end_time:chapter_tags=title)
+  done < <(ffprobe "${FFOPTS[@]}" -i "$AAX" -print_format csv=p=0 -show_entries chapter=id,start_time,end_time:chapter_tags=title)
 done
