@@ -8,9 +8,11 @@ Usage: $(basename "$0") --activation-bytes a1b2c3d4 [book1.aax ...] [-h|--help] 
 
 Arguments:
   -a, --activation-bytes HEXACODE  Audible activation bytes (8 hexadecimal characters)
+  --no-chapters                    Disable chapter splitting (transcode only)
 HELP
 }
 
+EXTRACT_CHAPTERS=true
 AAX_FILES=()
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -25,6 +27,9 @@ while [[ $# -gt 0 ]]; do
     -a|--activation-bytes)
       shift
       ACTIVATION_BYTES=$1
+      ;;
+    --no-chapters)
+      EXTRACT_CHAPTERS=false
       ;;
     *.aax)
       AAX_FILES+=("$1")
@@ -51,6 +56,14 @@ fi
 
 # prepare list of arguments shared between all calls to ffprobe/ffmpeg
 FFOPTS=(-hide_banner -loglevel error -activation_bytes "$ACTIVATION_BYTES")
+
+transcode() {
+  # Usage: transcode book.aax
+  #
+  # simply transcode from AAX to MP4 (no chapter splitting)
+  >&2 printf 'Transcoding "%s"\n' "$1"
+  ffmpeg -nostdin "${FFOPTS[@]}" -i "$1" -c copy "${1%.aax}.m4b"
+}
 
 extract_chapters() {
   # Usage: extract_chapters book.aax
@@ -84,5 +97,9 @@ extract_chapters() {
 }
 
 for AAX in "${AAX_FILES[@]}"; do
-  extract_chapters "$AAX"
+  if "$EXTRACT_CHAPTERS"; then
+    extract_chapters "$AAX"
+  else
+    transcode "$AAX"
+  fi
 done
