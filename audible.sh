@@ -49,9 +49,10 @@ if [[ ${#AAX_FILES[@]} -eq 0 ]]; then
   exit 1
 fi
 
+# prepare list of arguments shared between all calls to ffprobe/ffmpeg
+FFOPTS=(-hide_banner -loglevel error -activation_bytes "$ACTIVATION_BYTES")
+
 for AAX in "${AAX_FILES[@]}"; do
-  # prepare list of arguments shared between all calls to ffprobe/ffmpeg
-  FFOPTS=(-hide_banner -loglevel error -activation_bytes "$ACTIVATION_BYTES")
   # read artist and album metadata from format tags (flat is intended for shell integration)
   # this defines two new variables: format_tags_artist and format_tags_album
   eval "$(ffprobe "${FFOPTS[@]}" -i "$AAX" -print_format flat=s=_ -show_entries format_tags=artist,album)"
